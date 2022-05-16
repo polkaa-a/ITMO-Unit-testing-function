@@ -1,30 +1,10 @@
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class TaylorSeriesTest {
-
-    private static final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-    private static final PrintStream originalOut = System.out;
-
-    @BeforeAll
-    public static void setUpStream() {
-        System.setOut(new PrintStream(outContent));
-    }
-
-    @AfterAll
-    public static void restoreStream() {
-        System.setOut(originalOut);
-    }
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -88,9 +68,13 @@ class TaylorSeriesTest {
             4.71238898038469
     })
     void secInvalidInputs(double a) {
-        String expectedLog = "ERROR: FunctionIrrelevantException, the function has no value on the received input";
-        Exception exception = assertThrows(FunctionIrrelevantException.class, () -> TaylorSeries.sec(a));
-        assertTrue(exception.toString().contains(expectedLog));
+        String expectedLog = "Function value is irrelevant in point " + a;
+        TaylorSeries.setAddendumNum(12);
+        FunctionIrrelevantException thrown = assertThrows(
+                FunctionIrrelevantException.class,
+                () -> TaylorSeries.sec(a)
+        );
+        assertTrue(thrown.getMessage().contains(expectedLog));
     }
 
     @ParameterizedTest
@@ -113,22 +97,6 @@ class TaylorSeriesTest {
     void setAddendumNumValidInputs(int a) {
         TaylorSeries.setAddendumNum(a);
         Assertions.assertEquals(a, TaylorSeries.getAddendumNum());
-    }
-
-    @Test
-    public void factorialOverflowNotificationAppear() throws FunctionIrrelevantException {
-        String expectedLog = "WARN: FactorialOverflowException, decrease in calculation accuracy";
-        TaylorSeries.setAddendumNum(12);
-        TaylorSeries.sec(0);
-        assertTrue(outContent.toString().contains(expectedLog));
-    }
-
-    @Test
-    public void factorialOverflowNotificationNotAppear() throws FunctionIrrelevantException {
-        String unExpectedLog = "WARN: FactorialOverflowException, decrease in calculation accuracy";
-        TaylorSeries.setAddendumNum(11);
-        TaylorSeries.sec(0);
-        assertFalse(outContent.toString().contains(unExpectedLog));
     }
 }
 
